@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[metadata]
+name = "ice3d"
+version = "0.0.1"
+
+[tool.setuptools.packages]
+find = {}  # Scan the project directory with the default parameters
+
+[project]
+name = "ice3d"
+version = "0.0.1"
+authors = [
+  { name="Joseph Ko", email="jk4730@columbia.edu" },
+]
+description = "Code to generate synthetic ice and train models to predict 3d features from 2d images"
+readme = "README.md"
+requires-python = ">=3.8"
