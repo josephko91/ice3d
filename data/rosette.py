@@ -3,7 +3,7 @@ import numpy as np
 from math import pi
 import trame
 import math
-import helper
+from data import helper
 from copy import deepcopy
 import miniball
 import pymeshfix as mf
