@@ -4,7 +4,7 @@ Author: Joseph
 Created: 3/23/23
 """
 import numpy as np
-from math import pow, radians, sin, cos
+from math import pow, radians, sin, cos, floor, ceil
 
 def norm_rows(v):
     """Normalize rows of array v into unit vectors."""
@@ -112,3 +112,39 @@ def rotate_axis_angle(axis, angle):
         [0, 0, 0, 1]
     ])
     return transform_mat
+
+def round_up_to_decimal(number, decimals=0):
+    """Rounds a number up to the nearest specified decimal place.
+
+    Args:
+        number: The number to round up.
+        decimals: The number of decimal places to round to (default is 0).
+
+    Returns:
+        The rounded-up number.
+    """
+    if not isinstance(decimals, int):
+        raise TypeError("decimals must be an integer")
+    if decimals < 0:
+        raise ValueError("decimals must be non-negative")
+    
+    factor = 10 ** decimals
+    return ceil(number * factor) / factor
+
+def round_down_to_decimal(number, decimals=0):
+    """Rounds a number down to the nearest specified decimal place.
+
+    Args:
+        number: The number to round down.
+        decimals: The number of decimal places to round to (default is 0).
+
+    Returns:
+        The rounded-down number.
+    """
+    if not isinstance(decimals, int):
+        raise TypeError("decimals must be an integer")
+    if decimals < 0:
+        raise ValueError("decimals must be non-negative")
+    
+    factor = 10 ** decimals
+    return floor(number * factor) / factor

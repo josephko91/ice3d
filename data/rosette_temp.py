@@ -68,10 +68,17 @@ class Rosette:
         self.outer_coords = outer_coords # for testing 
 
         # create bullet arm
-        cyl = pv.Cylinder(center=(0.0, 0.0, c+hp), direction=(0.0, 0.0, -1.0), 
-                        radius=a, height=2*c, resolution=6, capping=True)
-        pyr = pv.Cone(center=(0.0, 0.0, hp/2), direction=(0.0, 0.0, -1.0), 
-                    height=hp, radius=a, capping=True, angle=None, resolution=6)
+        # cyl = pv.Cylinder(center=(0.0, 0.0, c+hp), direction=(0.0, 0.0, -1.0), 
+        #                 radius=a, height=2*c, resolution=6, capping=True)
+        # pyr = pv.Cone(center=(0.0, 0.0, hp/2), direction=(0.0, 0.0, -1.0), 
+        #             height=hp, radius=a, capping=True, angle=None, resolution=6)
+        # edit JK 2/12/25
+        pyr_center_rounded = (0.0, 0.0, helper.round_up_to_decimal(hp/2, 2))
+        cyl_center_rounded = (0.0, 0.0, helper.round_down_to_decimal(c+hp, 2))
+        cyl = pv.Cylinder(center=cyl_center_rounded, direction=(0.0, 0.0, -1.0), 
+                radius=a, height=2*c, resolution=6, capping=True)
+        pyr = pv.Cone(center=pyr_center_rounded, direction=(0.0, 0.0, -1.0), 
+            height=hp, radius=a, capping=True, angle=None, resolution=6)
         cyl = cyl.triangulate()
         pyr = pyr.triangulate()
         cyl_pts = cyl.points
@@ -82,7 +89,7 @@ class Rosette:
         pyr.points = pyr_pts
         bullet = cyl.boolean_union(pyr).triangulate()
         pt_dist = np.linalg.norm(bullet.points, axis=1)
-        print('this is a test')
+        # print('this is a test')
         tip_pt_index = np.argmin(pt_dist) # index of the tip point in bullet.points
         self.bullet_center_default = bullet.center # for testing
         self.bullet_default = bullet
