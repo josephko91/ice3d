@@ -82,6 +82,7 @@ class Rosette:
         pyr.points = pyr_pts
         bullet = cyl.boolean_union(pyr).triangulate()
         pt_dist = np.linalg.norm(bullet.points, axis=1)
+        print('this is a test')
         tip_pt_index = np.argmin(pt_dist) # index of the tip point in bullet.points
         self.bullet_center_default = bullet.center # for testing
         self.bullet_default = bullet
