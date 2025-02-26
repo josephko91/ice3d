@@ -1,32 +1,52 @@
 #!/bin/bash
-#SBATCH --job-name=parallel_python_job         # Job name
-#SBATCH --output=parallel_output_%A_%a.txt     # Output file (%A is job ID, %a is task ID)
-#SBATCH --ntasks=N                            # Number of tasks (N parallel tasks)
-#SBATCH --time=01:00:00                       # Max wall time
-#SBATCH --partition=general                   # Partition to run the job on
-#SBATCH --mem=4G                              # Memory per task
-#SBATCH --array=0-N-1                         # Task array (0 to N-1)
+#PBS -A UPSU0052
+### Job name
+#PBS -N gen_ros_parallel
+#PBS -m abe
+### queue
+#PBS -q main  
+### Output log file for each job
+#PBS -o output.log  
+### Error log file for each job
+#PBS -e error.log  
+### 1 node, 1 core per task
+#PBS -l select=1:ncpus=36
+### Time limit (1 hour)
+#PBS -l walltime=02:00:00 
+### Job array (10 tasks, from idx 0-9)
+#PBS -J 0-35%36
+#PBS -V
 
-# Load Python environment (adjust as needed)
-module load python/3.x
+# Record start time
+start_time=$(date +%s)  # Get current time in second
 
-# Set the input file name and output directory
-INPUT_FILE="data.txt"
-OUTPUT_DIR="output"
-mkdir -p $OUTPUT_DIR  # Create the output directory if it doesn't exist
+echo setting up CM1 run ${PBS_ARRAY_INDEX}
 
-# Get the total number of lines in the input file
-NUM_LINES=$(wc -l < $INPUT_FILE)
+# Load conda and activate environment
+module load conda
+source /glade/u/apps/opt/conda/etc/profile.d/conda.sh
+conda activate cq
 
-# Calculate the number of lines per task
-LINES_PER_TASK=$((NUM_LINES / N))
-START_LINE=$((SLURM_ARRAY_TASK_ID * LINES_PER_TASK + 1))
-END_LINE=$((START_LINE + LINES_PER_TASK - 1))
+# Number of tasks
+num_tasks=36  # Here, we want 10 tasks
 
-# Handle the last task to ensure it processes all remaining lines
-if [ $SLURM_ARRAY_TASK_ID -eq $((N - 1)) ]; then
-    END_LINE=$NUM_LINES
-fi
+# # Get the task index (PBS_ARRAYID provides the index for each job in the array)
+# task_index=${PBS_ARRAY_INDEX}
 
-# Run the Python script for the chunk of data
-python process_data.py "$INPUT_FILE" $START_LINE $END_LINE "$OUTPUT_DIR/output_${SLURM_ARRAY_TASK_ID}.txt"
+# echo $task_index
+
+# python script path 
+python_script_path="/glade/u/home/joko/ice3d/scripts/python/02-gen-rosettes-cq.py"
+
+# Run the Python script, passing the total number of tasks and the task index
+python $python_script_path $num_tasks ${PBS_ARRAY_INDEX}
+
+
+# Record end time
+end_time=$(date +%s)  # Get current time in seconds
+
+# Calculate the total runtime
+runtime=$((end_time - start_time))
+
+# Print the total runtime to the output log
+echo "Total runtime: $runtime seconds"
