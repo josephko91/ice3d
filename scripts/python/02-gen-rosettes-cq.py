@@ -104,25 +104,45 @@ def create_ros(params, n_arms, s_code, aspect_perturb):
         ros = ros.union(bullets[i])
     return ros
 ### ====================================== ###
+def get_record(ros, params, n_arms, id):
+    sa = ros.val().Area()
+    vol = ros.val().Volume()
+    record = [id, n_arms]
+    record.extend(params)
+    record.extend([sa, vol])
+    return record
 
-def process_instance(params, i):
+def process_instance(params, i, save_dir):
+    # make stl and record dirs if they don't exist
+    record_dir = save_dir + '/data'
+    stl_dir = save_dir + '/stl'
+    os.makedir(record_dir, exist_ok=True)
+    os.makedir(stl_dir, exist_ok=True)
+    # extract params
     base_params = params[0][:5]
     n_arms = params[0][5]
     aspect_perturb = params[1]
     s_code = params[2]
     ros = create_ros(base_params, n_arms, s_code, aspect_perturb)
-    save_dir = '/glade/derecho/scratch/joko/synth-ros/n1000-test-20250226'
+    # calc attributes and save record as txt
+    record = ros.get_record(ros, params, n_arms, i)
+    record_filename = f'record-ros-test-{i:06d}.txt'
+    record_filepath = os.path.join(record_dir, record_filename)
+    with open(record_filepath, 'w') as file:
+        file.write(', '.join(record))
+    # save model
     save_filename = f'ros-test-{i:06d}.stl'
     save_filepath = os.path.join(save_dir, save_filename)
     cq.exporters.export(ros, save_filepath) # save file
-    
 
-def process_chunk(chunk, start_index, end_index):
+def process_chunk(chunk, start_index, end_index, save_dir):
     for i in range(start_index, end_index):
         p = chunk[i]
-        process_instance(p, i)
+        process_instance(p, i, save_dir)
 
 def main():
+    # set directory to save data
+    save_dir = '/glade/derecho/scratch/joko/synth-ros/n1000-test-20250226'
     # Load the JSON file
     params_path = '/glade/u/home/joko/ice3d/output/params.json'
     with open(params_path, 'rb') as file:
@@ -151,7 +171,7 @@ def main():
         # chunk = params[start_index:end_index]
         # Process the chunk
         print(f'processing chunk {start_index}:{end_index}')
-        process_chunk(params, start_index, end_index)
+        process_chunk(params, start_index, end_index, save_dir)
     else:
         sys.exit() # out of index
 
