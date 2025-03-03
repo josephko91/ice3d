@@ -1,21 +1,21 @@
 #!/bin/bash
-#PBS -A UPSU0052
-### Job name
-#PBS -N gen_ros_parallel
-#PBS -m abe
-### queue
-#PBS -q main  
-### Output log file for each job
-#PBS -o output.log  
-### Error log file for each job
-#PBS -e error.log  
-### 1 node, 1 core per task
-#PBS -l select=1:ncpus=10
-### Time limit (1 hour)
-#PBS -l walltime=02:00:00 
-### Job array (10 tasks, from idx 0-9)
-#PBS -J 0-9%10
-#PBS -V
+# PBS -A UPSU0052
+# ## Job name
+# PBS -N gen_ros_parallel
+# PBS -m abe
+# ## queue
+# PBS -q main  
+# ## Output log file for each job
+# PBS -o output.log  
+# ## Error log file for each job
+# PBS -e error.log  
+# ## 1 node, 1 core per task
+# PBS -l select=1:ncpus=10
+# ## Time limit (1 hour)
+# PBS -l walltime=02:00:00 
+# ## Job array (10 tasks, from idx 0-9)
+# PBS -J 0-9%10
+# PBS -V
 
 # Record start time
 start_time=$(date +%s)  # Get current time in second
@@ -28,7 +28,7 @@ source /glade/u/apps/opt/conda/etc/profile.d/conda.sh
 conda activate cq
 
 # Number of tasks
-num_tasks=10  # Here, we want 10 tasks
+num_tasks=10
 
 # # Get the task index (PBS_ARRAYID provides the index for each job in the array)
 # task_index=${PBS_ARRAY_INDEX}

@@ -104,11 +104,11 @@ def create_ros(params, n_arms, s_code, aspect_perturb):
         ros = ros.union(bullets[i])
     return ros
 ### ====================================== ###
-def get_record(ros, params, n_arms, id):
+def get_record(ros, params, id):
     sa = ros.val().Area()
     vol = ros.val().Volume()
-    record = [id, n_arms]
-    record.extend(params)
+    record = [id]
+    record.extend(params[0])
     record.extend([sa, vol])
     return record
 
@@ -116,8 +116,8 @@ def process_instance(params, i, save_dir):
     # make stl and record dirs if they don't exist
     record_dir = save_dir + '/data'
     stl_dir = save_dir + '/stl'
-    os.makedir(record_dir, exist_ok=True)
-    os.makedir(stl_dir, exist_ok=True)
+    os.makedirs(record_dir, exist_ok=True)
+    os.makedirs(stl_dir, exist_ok=True)
     # extract params
     base_params = params[0][:5]
     n_arms = params[0][5]
@@ -125,14 +125,17 @@ def process_instance(params, i, save_dir):
     s_code = params[2]
     ros = create_ros(base_params, n_arms, s_code, aspect_perturb)
     # calc attributes and save record as txt
-    record = ros.get_record(ros, params, n_arms, i)
+    record = get_record(ros, params, i)
     record_filename = f'record-ros-test-{i:06d}.txt'
     record_filepath = os.path.join(record_dir, record_filename)
+    print(record_filepath)
     with open(record_filepath, 'w') as file:
-        file.write(', '.join(record))
+        file.write(",".join(map(str, record))) 
     # save model
     save_filename = f'ros-test-{i:06d}.stl'
-    save_filepath = os.path.join(save_dir, save_filename)
+    save_filepath = os.path.join(stl_dir, save_filename)
+    print(save_filepath)
+    print(type(ros))
     cq.exporters.export(ros, save_filepath) # save file
 
 def process_chunk(chunk, start_index, end_index, save_dir):
@@ -142,9 +145,10 @@ def process_chunk(chunk, start_index, end_index, save_dir):
 
 def main():
     # set directory to save data
-    save_dir = '/glade/derecho/scratch/joko/synth-ros/n1000-test-20250226'
+    save_dir = '/glade/derecho/scratch/joko/synth-ros/params-subset-20250227'
+    os.makedirs(save_dir, exist_ok=True)
     # Load the JSON file
-    params_path = '/glade/u/home/joko/ice3d/output/params.json'
+    params_path = '/glade/u/home/joko/ice3d/output/params_subset.json'
     with open(params_path, 'rb') as file:
         params = json.load(file)
 
