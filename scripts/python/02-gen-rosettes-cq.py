@@ -10,6 +10,7 @@ import json
 import copy
 import random
 import sys
+import miniball
 
 ### =========== (Rosette code) =========== ###
 def create_bullet(a, c, hp, f_a, f_c, workplane):
@@ -104,12 +105,43 @@ def create_ros(params, n_arms, s_code, aspect_perturb):
         ros = ros.union(bullets[i])
     return ros
 ### ====================================== ###
+def get_verts(ros, threshold):
+    verts = ros.vertices() # list of vertices 
+    origin = cq.Vertex.makeVertex(0,0,0)
+    filtered_verts = [v for v in verts if v.distance(origin) > threshold/2]
+    final_verts = np.asarray([list(v.Center().toTuple()) for v in filtered_verts])
+    return final_verts 
+    
+def calc_mbs(points):
+    """
+    Calculate minimal bounding sphere (mbs)
+    """
+    mbs = {} # store attributes of sphere as dict
+
+    # use miniball algorithm to find bounding sphere
+    # mesh_points = np.asarray(points)
+    unique_pts = np.unique(points, axis=0)
+    c, r2 = miniball.get_bounding_ball(unique_pts)
+    r = np.sqrt(r2) # r2 = radius squared, r = radius
+
+    mbs['c'] = c # center coordinates as np array
+    mbs['r'] = r # radius of sphere as float
+    mbs['v'] = (4/3)*np.pi*(r**3)
+    mbs['a'] = 4*np.pi*(r**2) 
+
+    return mbs
+
 def get_record(ros, params, id):
     sa = ros.val().Area()
     vol = ros.val().Volume()
+    base_params = params[0]
+    points = get_verts(ros, base_params[2])
+    mbs = calc_mbs(points)
+    rho_eff = vol/mbs['v'] 
+    sa_eff = sa/mbs['a']
     record = [id]
-    record.extend(params[0])
-    record.extend([sa, vol])
+    record.extend(base_params)
+    record.extend([sa, vol, sa_eff, rho_eff])
     return record
 
 def process_instance(params, i, save_dir):
@@ -145,7 +177,7 @@ def process_chunk(chunk, start_index, end_index, save_dir):
 
 def main():
     # set directory to save data
-    save_dir = '/glade/derecho/scratch/joko/synth-ros/params-subset-20250227'
+    save_dir = '/glade/derecho/scratch/joko/synth-ros/params-subset-20250306'
     os.makedirs(save_dir, exist_ok=True)
     # Load the JSON file
     params_path = '/glade/u/home/joko/ice3d/output/params_subset.json'
