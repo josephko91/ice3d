@@ -12,7 +12,7 @@
 ### 1 node, 1 core per task
 #PBS -l select=1:ncpus=10
 ### Time limit (1 hour)
-#PBS -l walltime=02:00:00 
+#PBS -l walltime=04:00:00 
 ### Job array (10 tasks, from idx 0-9)
 #PBS -J 0-9%10
 #PBS -V

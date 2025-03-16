@@ -108,9 +108,11 @@ def create_ros(params, n_arms, s_code, aspect_perturb):
 def get_verts(ros, threshold):
     verts = ros.vertices() # list of vertices 
     origin = cq.Vertex.makeVertex(0,0,0)
-    filtered_verts = [v for v in verts if v.distance(origin) > threshold/2]
+    # filtered_verts = [v for v in verts if v.distance(origin) > threshold/2]
+    filtered_verts = [v for v in verts]
     final_verts = np.asarray([list(v.Center().toTuple()) for v in filtered_verts])
     return final_verts 
+    
     
 def calc_mbs(points):
     """
@@ -132,42 +134,47 @@ def calc_mbs(points):
     return mbs
 
 def get_record(ros, params, id):
-    sa = ros.val().Area()
-    vol = ros.val().Volume()
-    base_params = params[0]
-    points = get_verts(ros, base_params[2])
-    mbs = calc_mbs(points)
-    rho_eff = vol/mbs['v'] 
-    sa_eff = sa/mbs['a']
-    record = [id]
-    record.extend(base_params)
-    record.extend([sa, vol, sa_eff, rho_eff])
-    return record
+    try:
+        sa = ros.val().Area()
+        vol = ros.val().Volume()
+        base_params = params[0]
+        # print(f'rosette {id}: {base_params}')
+        points = get_verts(ros, base_params[2])
+        mbs = calc_mbs(points)
+        rho_eff = vol/mbs['v'] 
+        sa_eff = sa/mbs['a']
+        record = [id]
+        record.extend(base_params)
+        record.extend([sa, vol, sa_eff, rho_eff])
+        return record
+    except Exception as e:
+        print(f'rosette {id}: {base_params}')
+        return f"An unexpected error occurred: {e}"
 
 def process_instance(params, i, save_dir):
-    # make stl and record dirs if they don't exist
-    record_dir = save_dir + '/data'
-    stl_dir = save_dir + '/stl'
-    os.makedirs(record_dir, exist_ok=True)
-    os.makedirs(stl_dir, exist_ok=True)
     # extract params
     base_params = params[0][:5]
     n_arms = params[0][5]
     aspect_perturb = params[1]
     s_code = params[2]
     ros = create_ros(base_params, n_arms, s_code, aspect_perturb)
+    # make stl and record dirs if they don't exist
+    record_dir = save_dir + f'/data/{n_arms}'
+    stl_dir = save_dir + f'/stl/{n_arms}'
+    os.makedirs(record_dir, exist_ok=True)
+    os.makedirs(stl_dir, exist_ok=True)
     # calc attributes and save record as txt
     record = get_record(ros, params, i)
     record_filename = f'record-ros-test-{i:06d}.txt'
     record_filepath = os.path.join(record_dir, record_filename)
-    print(record_filepath)
+    # print(record_filepath)
     with open(record_filepath, 'w') as file:
         file.write(",".join(map(str, record))) 
     # save model
     save_filename = f'ros-test-{i:06d}.stl'
     save_filepath = os.path.join(stl_dir, save_filename)
-    print(save_filepath)
-    print(type(ros))
+    # print(save_filepath)
+    # print(type(ros))
     cq.exporters.export(ros, save_filepath) # save file
 
 def process_chunk(chunk, start_index, end_index, save_dir):
@@ -177,10 +184,10 @@ def process_chunk(chunk, start_index, end_index, save_dir):
 
 def main():
     # set directory to save data
-    save_dir = '/glade/derecho/scratch/joko/synth-ros/params-subset-20250306'
+    save_dir = '/glade/derecho/scratch/joko/synth-ros/params_200_50-20250314'
     os.makedirs(save_dir, exist_ok=True)
     # Load the JSON file
-    params_path = '/glade/u/home/joko/ice3d/output/params_subset.json'
+    params_path = '/glade/u/home/joko/ice3d/output/params_200_50.json'
     with open(params_path, 'rb') as file:
         params = json.load(file)
 
