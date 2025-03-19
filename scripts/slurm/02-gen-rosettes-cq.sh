@@ -6,15 +6,15 @@
 ### queue
 #PBS -q main  
 ### Output log file for each job
-#PBS -o output.log  
+#PBS -o output_$PBS_JOBID.log
 ### Error log file for each job
-#PBS -e error.log  
+#PBS -e error_$PBS_JOBID.log
 ### 1 node, 1 core per task
-#PBS -l select=1:ncpus=10
-### Time limit (1 hour)
+#PBS -l select=1:ncpus=36
+### Time limit (4 hours)
 #PBS -l walltime=04:00:00 
 ### Job array (10 tasks, from idx 0-9)
-#PBS -J 0-9%10
+#PBS -J 0-35%36
 #PBS -V
 
 # Record start time

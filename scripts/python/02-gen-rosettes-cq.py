@@ -134,57 +134,63 @@ def calc_mbs(points):
     return mbs
 
 def get_record(ros, params, id):
-    try:
-        sa = ros.val().Area()
-        vol = ros.val().Volume()
-        base_params = params[0]
-        # print(f'rosette {id}: {base_params}')
-        points = get_verts(ros, base_params[2])
-        mbs = calc_mbs(points)
-        rho_eff = vol/mbs['v'] 
-        sa_eff = sa/mbs['a']
-        record = [id]
-        record.extend(base_params)
-        record.extend([sa, vol, sa_eff, rho_eff])
-        return record
-    except Exception as e:
-        print(f'rosette {id}: {base_params}')
-        return f"An unexpected error occurred: {e}"
+    base_params = params[0]
+    record = [id]
+    record.extend(base_params)
+    if ros==None:
+        # -666 is tag for ros creation bug
+        sa = vol = sa_eff = rho_eff = -666
+    else:
+        try:
+            sa = ros.val().Area()
+            vol = ros.val().Volume()
+            points = get_verts(ros, base_params[2])
+            mbs = calc_mbs(points)
+            rho_eff = vol/mbs['v'] 
+            sa_eff = sa/mbs['a']
+        except Exception as e:
+            # -999 is tag for mbs bug
+            sa = vol = sa_eff = rho_eff = -999
+            print(f'mbs error: {e}')
+    record.extend([sa, vol, sa_eff, rho_eff])
+    return record
 
-def process_instance(params, i, save_dir):
+def process_instance(params, i, save_dir, task_index):
     # extract params
     base_params = params[0][:5]
     n_arms = params[0][5]
     aspect_perturb = params[1]
     s_code = params[2]
-    ros = create_ros(base_params, n_arms, s_code, aspect_perturb)
     # make stl and record dirs if they don't exist
-    record_dir = save_dir + f'/data/{n_arms}'
+    record_dir = save_dir + f'/data'
     stl_dir = save_dir + f'/stl/{n_arms}'
     os.makedirs(record_dir, exist_ok=True)
     os.makedirs(stl_dir, exist_ok=True)
+    try: 
+        ros = create_ros(base_params, n_arms, s_code, aspect_perturb)
+        save_filename = f'ros-test-{i:06d}.stl'
+        save_filepath = os.path.join(stl_dir, save_filename)
+        cq.exporters.export(ros, save_filepath) # save file
+    except Exception as e:
+        ros = None
+        print(f'create_ros error: {e}')
     # calc attributes and save record as txt
     record = get_record(ros, params, i)
-    record_filename = f'record-ros-test-{i:06d}.txt'
+    record_filename = f'ros-data-{task_index}.txt'
     record_filepath = os.path.join(record_dir, record_filename)
     # print(record_filepath)
-    with open(record_filepath, 'w') as file:
-        file.write(",".join(map(str, record))) 
-    # save model
-    save_filename = f'ros-test-{i:06d}.stl'
-    save_filepath = os.path.join(stl_dir, save_filename)
-    # print(save_filepath)
-    # print(type(ros))
-    cq.exporters.export(ros, save_filepath) # save file
+    with open(record_filepath, 'a') as file:
+        file.write(",".join(map(str, record)) + '\n') 
+    
 
-def process_chunk(chunk, start_index, end_index, save_dir):
+def process_chunk(chunk, start_index, end_index, save_dir, task_index):
     for i in range(start_index, end_index):
         p = chunk[i]
-        process_instance(p, i, save_dir)
+        process_instance(p, i, save_dir, task_index)
 
 def main():
     # set directory to save data
-    save_dir = '/glade/derecho/scratch/joko/synth-ros/params_200_50-20250314'
+    save_dir = '/glade/derecho/scratch/joko/synth-ros/params_200_50-debug-20250316'
     os.makedirs(save_dir, exist_ok=True)
     # Load the JSON file
     params_path = '/glade/u/home/joko/ice3d/output/params_200_50.json'
@@ -214,7 +220,7 @@ def main():
         # chunk = params[start_index:end_index]
         # Process the chunk
         print(f'processing chunk {start_index}:{end_index}')
-        process_chunk(params, start_index, end_index, save_dir)
+        process_chunk(params, start_index, end_index, save_dir, task_index)
     else:
         sys.exit() # out of index
 
