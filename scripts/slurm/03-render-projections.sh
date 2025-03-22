@@ -1,21 +1,19 @@
 #!/bin/bash
-# PBS -A UPSU0052
-# ## Job name
-# PBS -N gen_ros_parallel
-# PBS -m abe
-# ## queue
-# PBS -q main  
-# ## Output log file for each job
-# PBS -o output.log  
-# ## Error log file for each job
-# PBS -e error.log  
-# ## 1 node, 1 core per task
-# PBS -l select=1:ncpus=10
-# ## Time limit (1 hour)
-# PBS -l walltime=02:00:00 
-# ## Job array (10 tasks, from idx 0-9)
-# PBS -J 0-9%10
-# PBS -V
+#PBS -A UPSU0052
+### Job name
+#PBS -N projections_parallel
+#PBS -o ./out/output_08.log 
+#PBS -e ./err/error_08.log
+#PBS -m abe
+### queue
+#PBS -q main  
+### select # nodes and cores
+#PBS -l select=1:ncpus=128
+### Time limit
+#PBS -l walltime=08:00:00 
+### Job array (N tasks, from idx 0-(N-1))
+#PBS -J 0-127%128
+#PBS -V
 
 # Record start time
 start_time=$(date +%s)  # Get current time in second
@@ -25,22 +23,16 @@ echo setting up CM1 run ${PBS_ARRAY_INDEX}
 # Load conda and activate environment
 module load conda
 source /glade/u/apps/opt/conda/etc/profile.d/conda.sh
-conda activate cq
+conda activate pyvista_pip
 
 # Number of tasks
-num_tasks=10
-
-# # Get the task index (PBS_ARRAYID provides the index for each job in the array)
-# task_index=${PBS_ARRAY_INDEX}
-
-# echo $task_index
+num_tasks=128
 
 # python script path 
-python_script_path="/glade/u/home/joko/ice3d/scripts/python/02-gen-rosettes-cq.py"
+python_script_path="/glade/u/home/joko/ice3d/scripts/python/04-projections.py"
 
 # Run the Python script, passing the total number of tasks and the task index
 python $python_script_path $num_tasks ${PBS_ARRAY_INDEX}
-
 
 # Record end time
 end_time=$(date +%s)  # Get current time in seconds

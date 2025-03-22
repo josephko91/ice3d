@@ -6,9 +6,9 @@
 ### queue
 #PBS -q main  
 ### Output log file for each job
-#PBS -o output_$PBS_JOBID.log
+#PBS -o output.log
 ### Error log file for each job
-#PBS -e error_$PBS_JOBID.log
+#PBS -e error.log
 ### 1 node, 1 core per task
 #PBS -l select=1:ncpus=36
 ### Time limit (4 hours)
