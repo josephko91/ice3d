@@ -1,16 +1,16 @@
 #!/bin/bash
 #PBS -A UPSU0052
 ### Job name
-#PBS -N projections_parallel
-#PBS -o ./out/output_15.log 
-#PBS -e ./err/error_15.log
+#PBS -N create_data_full
+#PBS -o ./out/create-data/output_11.log 
+#PBS -e ./err/create-data/error_11.log
 #PBS -m abe
 ### queue
 #PBS -q main  
 ### select # nodes and cores
 #PBS -l select=1:ncpus=100
 ### Time limit
-#PBS -l walltime=08:00:00 
+#PBS -l walltime=02:00:00 
 ### Job array (N tasks, from idx 0-(N-1))
 #PBS -J 0-99%100
 #PBS -V
@@ -18,7 +18,7 @@
 # Record start time
 start_time=$(date +%s)  # Get current time in second
 
-echo setting up CM1 run ${PBS_ARRAY_INDEX}
+echo setting up run ${PBS_ARRAY_INDEX}
 
 # Load conda and activate environment
 module load conda
@@ -29,7 +29,7 @@ conda activate pyvista_pip
 num_tasks=100
 
 # python script path 
-python_script_path="/glade/u/home/joko/ice3d/scripts/python/04-projections.py"
+python_script_path="/glade/u/home/joko/ice3d/scripts/python/06-create-data.py"
 
 # Run the Python script, passing the total number of tasks and the task index
 python $python_script_path $num_tasks ${PBS_ARRAY_INDEX}

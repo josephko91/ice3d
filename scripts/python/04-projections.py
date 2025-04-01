@@ -16,8 +16,8 @@ def random_rotate(mesh):
 
 def process_instance(stl_path, save_dir, n_proj, params):
     res = 128
-    bg_color='black'
-    obj_color='white'
+    bg_color='white'
+    obj_color='black'
     op=1.0
     pl = pv.Plotter(off_screen=True, window_size=[res, res])
     pl.background_color = bg_color
@@ -45,7 +45,8 @@ def main():
     # set number of random projections
     n_proj = 100
     # set directories
-    save_dir = '/glade/derecho/scratch/joko/synth-ros/params_200_50-debug-20250316/projections'
+    save_dir = '/glade/derecho/scratch/joko/synth-ros/params_200_50-debug-20250316/projections-white-bg'
+    os.makedirs(save_dir, exist_ok=True)
     # Load the JSON file
     params_path = '/glade/u/home/joko/ice3d/output/params_200_50.json'
     with open(params_path, 'rb') as file:
