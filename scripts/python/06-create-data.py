@@ -128,7 +128,7 @@ def process_instance(img_path, save_dir, df_ros, task_index):
     img = get_img(img_path)
     # run processing functions on img
     _, contours = get_border(img, 5)
-    cnt = contours[0]G
+    cnt = contours[0]
     aspect_ratio = get_aspect_ratio(cnt)
     aspect_ratio_elip = get_aspect_ratio_elip(cnt)
     extreme_pts = get_extreme_pts(cnt)

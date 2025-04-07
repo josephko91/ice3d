@@ -22,15 +22,13 @@ error_log="error_${PBS_JOBID}.log"
 echo "Job started at: $(date)" > $output_log
 echo "Job started at: $(date)" > $error_log
 
-echo setting up CM1 run
-
 # Load conda and activate environment
 module load conda
 source /glade/u/apps/opt/conda/etc/profile.d/conda.sh
-conda activate cq
+conda activate pyvista_pip
 
 # python script path 
-python_script_path="/glade/u/home/joko/ice3d/scripts/python/05-gen-ros-residuals.py"
+python_script_path="/glade/u/home/joko/ice3d/scripts/python/09-stl-to-png-serial.py"
 
 # Run the Python script and append to the logs
 python $python_script_path >> $output_log 2>> $error_log
