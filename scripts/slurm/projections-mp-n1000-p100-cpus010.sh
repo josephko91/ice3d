@@ -1,11 +1,11 @@
 #!/bin/bash
 #PBS -A UPSU0052
-#PBS -N projections-mp-all-p100-cpus128
-#PBS -o ./out/projections-mp/output-all-p100-cpus128.log 
-#PBS -e ./err/projections-mp/error-all-p100-cpus128.log
+#PBS -N projections-mp-n1000-p100-cpus010
+#PBS -o ./out/projections-mp/output-n1000-p100-cpus010.log 
+#PBS -e ./err/projections-mp/error-n1000-p100-cpus010.log
 #PBS -m abe
 #PBS -q main  
-#PBS -l select=1:ncpus=100
+#PBS -l select=1:ncpus=10:mem=16GB
 #PBS -l walltime=01:00:00
 #PBS -V
 
@@ -19,8 +19,8 @@ conda activate pyvista_pip
 
 # set parameters for python script
 n_proj=100
-n_cores=1000
-save_dir="/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/projections"
+n_cores=10
+save_dir="/glade/derecho/scratch/joko/synth-ros/test-mp-n1000-p100-cpus010"
 
 # python script path 
 python_script_path="/glade/u/home/joko/ice3d/scripts/python/10-projections-mp.py"

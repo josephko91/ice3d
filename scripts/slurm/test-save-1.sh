@@ -1,11 +1,11 @@
 #!/bin/bash
-#PBS -A UPSU0052
-#PBS -N projections-mp-all-p100-cpus128
-#PBS -o ./out/projections-mp/output-all-p100-cpus128.log 
-#PBS -e ./err/projections-mp/error-all-p100-cpus128.log
+#PBS -A UCLB0047
+#PBS -N test-save-1
+#PBS -o ./out/projections-mp/out-test-save-1.log 
+#PBS -e ./err/projections-mp/error-test-save-1.log
 #PBS -m abe
 #PBS -q main  
-#PBS -l select=1:ncpus=100
+#PBS -l select=1:ncpus=1
 #PBS -l walltime=01:00:00
 #PBS -V
 
@@ -18,16 +18,14 @@ source /glade/u/apps/opt/conda/etc/profile.d/conda.sh
 conda activate pyvista_pip
 
 # set parameters for python script
-n_proj=100
+n_proj=10
 n_cores=1000
 save_dir="/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/projections"
 
 # python script path 
-python_script_path="/glade/u/home/joko/ice3d/scripts/python/10-projections-mp.py"
+python_script_path="/glade/u/home/joko/ice3d/scripts/python/11-test-save.py"
 
 echo starting run...
-echo "Taking $n_proj projections per stl file"
-echo "Using $n_cores cpu cores"
 
 # Run the Python script, passing the total number of tasks and the task index
 python $python_script_path $n_cores $n_proj $save_dir

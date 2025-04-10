@@ -40,7 +40,7 @@ def get_orthogonal_vector(v):
     return v_orth
 
 def get_savepath(id, i, save_folders, n_arms, suffix):
-    filename = f'ros-projection-{id}-{i:03d}-{suffix}.png'
+    filename = f'test-save-{id}-{i:03d}-{suffix}.png'
     save_folder = save_folders[suffix]
     folder = os.path.join(save_folder, str(n_arms))
     os.makedirs(folder, exist_ok=True)
@@ -87,20 +87,6 @@ def process_stl(file_path, save_dir, n_proj, params):
         end_save = time.time()
         save_time += end_save - start_save
         pl.remove_actor(actor_default)
-        # === 2DS === #
-        mesh_2ds = rotated_mesh.rotate_vector(axis_rotation, theta_2ds, point=rotated_mesh.center)
-        actor_2ds = pl.add_mesh(mesh_2ds, show_edges=None, color = obj_color, opacity=op)
-        savepath = get_savepath(id, i, save_folders, n_arms, '2ds')
-        pl.render()
-        pl.screenshot(savepath, return_img=False)
-        pl.remove_actor(actor_2ds) # remove 2ds 
-        # === PHIPS === #
-        mesh_phips = rotated_mesh.rotate_vector(axis_rotation, theta_phips, point=rotated_mesh.center)
-        pl.add_mesh(mesh_phips, show_edges=None, color = obj_color, opacity=op)
-        savepath = get_savepath(id, i, save_folders, n_arms, 'phips')
-        pl.render()
-        pl.screenshot(savepath, return_img=False)
-        # close plotter
         pl.close()
     end_time = time.time() # for testing
     print(f'processing {file_path}: {end_time - start_time} seconds')
@@ -113,7 +99,7 @@ def main():
     n_proj = int(sys.argv[2])  
     save_dir = sys.argv[3]
     os.makedirs(save_dir, exist_ok=True)
-    chunk = int(sys.argv[4])
+    # chunk = int(sys.argv[4])
     # Load the JSON file
     params_path = '/glade/u/home/joko/ice3d/output/params_200_50.json'
     with open(params_path, 'rb') as file:
@@ -124,18 +110,17 @@ def main():
         basepath = '/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/stl'
         rel_paths = [line.strip().replace('./','') for line in file]
         stl_paths = [os.path.join(basepath, i) for i in rel_paths]
-    # chunk stl_paths
-    print(f'stl_paths length: {len(stl_paths)}')
-    start_idx = int((chunk-1)*(len(stl_paths)/7))
-    end_idx = int(chunk*(len(stl_paths)/7))
-    print(f'Processing index range: [{start_idx}:{end_idx}]')
-    print(f'index dtype: {type(start_idx)}, {type(end_idx)}')
-    stl_paths = stl_paths[start_idx:end_idx]
-    sys.stdout.flush() # force write to stdout
-    process_stl_params = partial(process_stl, save_dir=save_dir, n_proj=n_proj, params=params)
-    # Use a multiprocessing Pool to process the STL files in parallel
-    with multiprocessing.Pool(processes=num_cores) as pool:
-        pool.map(process_stl_params, stl_paths)
+    stl_paths=stl_paths[:100]
+    # # chunk stl_paths
+    # print(f'stl_paths length: {len(stl_paths)}')
+    # start_idx = int((chunk-1)*(len(stl_paths)/7))
+    # end_idx = int(chunk*(len(stl_paths)/7))
+    # print(f'Processing index range: [{start_idx}:{end_idx}]')
+    # print(f'index dtype: {type(start_idx)}, {type(end_idx)}')
+    # stl_paths = stl_paths[start_idx:end_idx]
+    # sys.stdout.flush() # force write to stdout
+    for file_path in stl_paths:
+        process_stl(file_path, save_dir, n_proj, params)
 
 if __name__ == "__main__":
     main()
