@@ -1,5 +1,6 @@
 # User added 
 output/
+models/lightning_logs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
