@@ -108,9 +108,10 @@ def create_ros(params, n_arms, s_code, aspect_perturb):
 def get_verts(ros, threshold):
     verts = ros.vertices() # list of vertices 
     origin = cq.Vertex.makeVertex(0,0,0)
-    # filtered_verts = [v for v in verts if v.distance(origin) > threshold/2]
-    filtered_verts = [v for v in verts]
+    filtered_verts = [v for v in verts if v.distance(origin) > threshold/2]
+    # filtered_verts = [v for v in verts]
     final_verts = np.asarray([list(v.Center().toTuple()) for v in filtered_verts])
+    final_verts = np.round(final_verts, 2) # round to 2 sigfigs
     return final_verts 
     
     
@@ -137,6 +138,7 @@ def get_record(ros, params, id):
     base_params = params[0]
     record = [id]
     record.extend(base_params)
+    print(f'inside get_record: {base_params}')
     if ros==None:
         # -666 is tag for ros creation bug
         sa = vol = sa_eff = rho_eff = -666
@@ -144,7 +146,7 @@ def get_record(ros, params, id):
         try:
             sa = ros.val().Area()
             vol = ros.val().Volume()
-            points = get_verts(ros, base_params[2])
+            points = get_verts(ros, base_params[1])
             mbs = calc_mbs(points)
             rho_eff = vol/mbs['v'] 
             sa_eff = sa/mbs['a']
@@ -161,9 +163,16 @@ def process_instance(params, i, save_dir, task_index):
     n_arms = params[0][5]
     aspect_perturb = params[1]
     s_code = params[2]
+    print(f'processing instance {i}')
+    print(f'base_params before rounding: {base_params}')
+    # reduce sigfigs
+    base_params = [round(i, 2) for i in base_params]
+    s_code = [round(i, 2) for i in s_code]
+    aspect_perturb = [round(i, 2) for i in aspect_perturb]
+    print(f'base_params after rounding: {base_params}')
     # make stl and record dirs if they don't exist
-    record_dir = save_dir + f'/data'
-    stl_dir = save_dir + f'/stl/{n_arms}'
+    record_dir = save_dir + f'/data-v2'
+    stl_dir = save_dir + f'/stl-v2/{n_arms}'
     os.makedirs(record_dir, exist_ok=True)
     os.makedirs(stl_dir, exist_ok=True)
     try: 
@@ -175,6 +184,7 @@ def process_instance(params, i, save_dir, task_index):
         ros = None
         print(f'create_ros error: {e}')
     # calc attributes and save record as txt
+    # record = get_record(ros, params, i)
     record = get_record(ros, params, i)
     record_filename = f'ros-data-{task_index}.txt'
     record_filepath = os.path.join(record_dir, record_filename)
@@ -190,13 +200,14 @@ def process_chunk(chunk, start_index, end_index, save_dir, task_index):
 
 def main():
     # set directory to save data
-    save_dir = '/glade/derecho/scratch/joko/synth-ros/params_200_50-debug-20250316'
+    save_dir = '/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403'
     os.makedirs(save_dir, exist_ok=True)
     # Load the JSON file
     params_path = '/glade/u/home/joko/ice3d/output/params_200_50.json'
     with open(params_path, 'rb') as file:
         params = json.load(file)
-
+    params = params[:10000] # for testing
+    print(f'Creating {len(params)} STL files')
     # Get the total number of tasks (this will be passed by PBS)
     num_tasks = int(sys.argv[1])
     

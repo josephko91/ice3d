@@ -1,20 +1,13 @@
 #!/bin/bash
-#PBS -A UPSU0052
-### Job name
+#PBS -A UCLB0047
 #PBS -N gen_ros_parallel
 #PBS -m abe
-### queue
 #PBS -q main  
-### Output log file for each job
-#PBS -o output.log
-### Error log file for each job
-#PBS -e error.log
-### 1 node, 1 core per task
-#PBS -l select=1:ncpus=36
-### Time limit (4 hours)
-#PBS -l walltime=04:00:00 
-### Job array (10 tasks, from idx 0-9)
-#PBS -J 0-35%36
+#PBS -o ./out/get-stl/output-07.log 
+#PBS -e ./err/get-stl/error-07.log
+#PBS -l select=1:ncpus=1
+#PBS -l walltime=01:00:00 
+#PBS -J 0-9
 #PBS -V
 
 # Record start time

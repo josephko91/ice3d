@@ -1,38 +1,36 @@
 #!/bin/bash
 #PBS -A UCLB0047
-### Job name
-#PBS -N create_data_full
-#PBS -o ./out/create-data/output_20.log 
-#PBS -e ./err/create-data/error_20.log
+#PBS -N projections-narms-4
+#PBS -o ../out/updated-4arms-rosettes/output-05.log 
+#PBS -e ../err/updated-4arms-rosettes/error-05.log
 #PBS -m abe
-### queue
 #PBS -q main  
-### select # nodes and cores
 #PBS -l select=1:ncpus=1
-### Time limit
-#PBS -l walltime=08:00:00 
-### Job array (N tasks, from idx 0-(N-1))
-#PBS -J 0-99
+#PBS -l walltime=04:00:00
 #PBS -V
 
 # Record start time
 start_time=$(date +%s)  # Get current time in second
-
-echo setting up run ${PBS_ARRAY_INDEX}
 
 # Load conda and activate environment
 module load conda
 source /glade/u/apps/opt/conda/etc/profile.d/conda.sh
 conda activate pyvista_pip
 
-# Number of tasks
-num_tasks=100
+# set parameters for python script
+n_proj=100
+n_cores=1
+save_dir="/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/projections-v2"
 
 # python script path 
-python_script_path="/glade/u/home/joko/ice3d/scripts/python/06-create-data.py"
+python_script_path="/glade/u/home/joko/ice3d/scripts/python/update-4arms-rosettes/projections-serial.py"
+
+echo starting run...
+echo "Taking $n_proj projections per stl file"
+echo "Using $n_cores cpu cores"
 
 # Run the Python script, passing the total number of tasks and the task index
-python $python_script_path $num_tasks ${PBS_ARRAY_INDEX}
+python $python_script_path $n_cores $n_proj $save_dir
 
 # Record end time
 end_time=$(date +%s)  # Get current time in seconds

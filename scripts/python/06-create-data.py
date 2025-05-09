@@ -9,6 +9,7 @@ import pandas as pd
 import os, sys
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 
 ### ========= Helper functions ========= ###
 
@@ -118,11 +119,14 @@ def process_img(path):
 def process_instance(img_path, save_dir, df_ros, task_index):
     # initiate data record 
     data_record = []
-    ros_id = img_path.rsplit('-',2)[1]
-    proj_id = img_path.rsplit('-',2)[2].split('.',2)[0]
-    unique_id = ros_id + '_' + proj_id
+    filename = img_path.rsplit('/',1)[1]
+    filename.split('-')
+    ros_id = filename.split('-')[2]
+    proj_id = filename.split('-')[3]
+    view = filename.split('-')[-1].split('.')[0]
+    unique_id = ros_id + '_' + proj_id + '_' + view
     params_output = list(df_ros[df_ros['id']==int(ros_id)].iloc[0]) # inputs params + outputs
-    data_record.extend([unique_id, ros_id, proj_id])
+    data_record.extend([filename, unique_id, ros_id, proj_id, view])
     data_record.extend(params_output[1:])
     # open image
     img = get_img(img_path)
@@ -144,12 +148,12 @@ def process_instance(img_path, save_dir, df_ros, task_index):
     data_record.extend(img_features) 
     # append to data file (one file per core to split up data)
     record_filename = f'ros-tabular-data-{task_index}.txt'
-    record_dir = os.path.join(save_dir, 'tabular-data')
+    record_dir = os.path.join(save_dir, 'tabular-data-v2')
     os.makedirs(record_dir, exist_ok=True) # make dir if doesn't exist
     record_filepath = os.path.join(record_dir, record_filename)
-    # test prints
-    print(f'writing data to -> {record_filepath}')
-    print(f'data -> {data_record}')
+    # # test prints
+    # print(f'writing data to -> {record_filepath}')
+    # print(f'data -> {data_record}')
     with open(record_filepath, 'a') as file: 
         file.write(",".join(map(str, data_record)) + '\n') 
 
@@ -160,16 +164,17 @@ def process_chunk(img_paths, start_index, end_index, save_dir, df_ros,  task_ind
 
 ### ========= Main ========= ###
 def main():
-    save_dir = '/glade/derecho/scratch/joko/synth-ros/params_200_50-debug-20250316'
+    save_dir = '/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403'
     projections_dir = os.path.join(save_dir, 'projections')
-    ros_data = '/glade/derecho/scratch/joko/synth-ros/params_200_50-debug-20250316/data/ros-data-merged.txt'
+    ros_data = '/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/data/ros-data-merged-v2.txt'
     df_ros = pd.read_csv(ros_data) # data: params + outputs
     # get list of paths of all images
-    img_paths_txt = '/glade/derecho/scratch/joko/synth-ros/params_200_50-debug-20250316/projections/img_relative_paths.txt'
+    img_paths_txt = '/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/projections/img_relative_paths.txt'
     with open(img_paths_txt, 'r') as file:
         rel_paths = [line.strip().replace('./','') for line in file]
         img_paths = [os.path.join(projections_dir, i) for i in rel_paths]
-    # img_paths = img_paths[:1000] # for testing 
+    # random.shuffle(img_paths) # shuffle the list in place
+    # img_paths = img_paths[:1_000_000]
     print(f'Creating data for {len(img_paths)} png files!!!')
     # Get the total number of tasks (this will be passed by PBS)
     num_tasks = int(sys.argv[1])
