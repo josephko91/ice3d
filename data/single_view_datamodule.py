@@ -22,6 +22,8 @@ class SingleViewDataModule(pl.LightningDataModule):
         train_target_transform=None,
         val_target_transform=None,
         test_target_transform=None,
+        task_type='regression',
+        class_to_idx=None
     ):
         super().__init__()
         self.target_names = [target_names] if isinstance(target_names, str) else target_names
@@ -40,6 +42,8 @@ class SingleViewDataModule(pl.LightningDataModule):
         self.train_target_transform = train_target_transform
         self.val_target_transform = val_target_transform
         self.test_target_transform = test_target_transform
+        self.task_type = task_type
+        self.class_to_idx = class_to_idx
 
     def _subset_indices(self, indices):
         if self.subset_size is not None and 0 < self.subset_size < 1:
@@ -56,17 +60,23 @@ class SingleViewDataModule(pl.LightningDataModule):
         self.train_dataset = SingleViewDataset(
             self.hdf_file, self.target_names, train_idx,
             transform=self.train_transform,
-            target_transform=self.train_target_transform
+            target_transform=self.train_target_transform,
+            task_type=self.task_type,
+            class_to_idx=self.class_to_idx
         )
         self.val_dataset = SingleViewDataset(
             self.hdf_file, self.target_names, val_idx,
             transform=self.val_transform,
-            target_transform=self.val_target_transform
+            target_transform=self.val_target_transform,
+            task_type=self.task_type,
+            class_to_idx=self.class_to_idx
         )
         self.test_dataset = SingleViewDataset(
             self.hdf_file, self.target_names, test_idx,
             transform=self.test_transform,
-            target_transform=self.test_target_transform
+            target_transform=self.test_target_transform,
+            task_type=self.task_type,
+            class_to_idx=self.class_to_idx
         )
 
     def train_dataloader(self):
