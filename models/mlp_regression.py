@@ -9,10 +9,10 @@ class MLPRegression(pl.LightningModule):
         self.learning_rate = learning_rate
 
         # Fully connected layers
-        self.fc1 = nn.Linear(input_size, 256)
-        self.fc2 = nn.Linear(256, 128)
-        self.fc3 = nn.Linear(128, 64)
-        self.fc4 = nn.Linear(64, output_size)  # Output size = 2 for two targets
+        self.fc1 = nn.Linear(input_size, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 32)
+        self.fc4 = nn.Linear(32, output_size)  # Output size = 2 for two targets
 
     def forward(self, x):
         # Fully connected layers with ReLU
