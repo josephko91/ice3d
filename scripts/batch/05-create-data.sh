@@ -1,11 +1,10 @@
 #!/bin/bash
-#PBS -A UCLB0047
+#PBS -A UCLB0041
 ### Job name
-#PBS -N create_data_full
+#PBS -N create_data_2ds
 #PBS -o ./out/create-data/output_20.log 
 #PBS -e ./err/create-data/error_20.log
 #PBS -m abe
-### queue
 #PBS -q main  
 ### select # nodes and cores
 #PBS -l select=1:ncpus=1
