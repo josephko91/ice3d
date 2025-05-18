@@ -10,22 +10,40 @@
 #PBS -q casper
 #PBS -V
 
-### Provide CUDA runtime libraries
 module load cuda
 module load conda 
 conda activate torch
 
-# python script path 
 python_script_path="/glade/u/home/joko/ice3d/scripts/python/12-train-torch-models.py"
 
-### Measure execution time
+# Set your arguments here
+MODEL="resnet18_regression"
+DATA_TYPE="single_view_h5"
+HDF_FILE="/glade/u/home/joko/ice3d/data/mydata.h5"
+TARGETS="rho_eff,sa_eff"
+INPUT_CHANNELS=2
+BATCH_SIZE=64
+LR=1e-4
+MAX_EPOCHS=20
+LOG_DIR="./lightning_logs"
+TB_LOG_NAME="tb"
+CSV_LOG_NAME="csv"
+
 start_time=$(date +%s)
 
-### Run program
-# Run the Python script and append to the logs
-python $python_script_path
+python $python_script_path \
+    --model $MODEL \
+    --data_type $DATA_TYPE \
+    --hdf_file $HDF_FILE \
+    --targets $TARGETS \
+    --input_channels $INPUT_CHANNELS \
+    --batch_size $BATCH_SIZE \
+    --lr $LR \
+    --max_epochs $MAX_EPOCHS \
+    --log_dir $LOG_DIR \
+    --tb_log_name $TB_LOG_NAME \
+    --csv_log_name $CSV_LOG_NAME
 
-### Calculate and print execution time
 end_time=$(date +%s)
 execution_time=$((end_time - start_time))
 echo "Total execution time: ${execution_time} seconds"
