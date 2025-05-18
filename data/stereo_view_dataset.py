@@ -8,7 +8,11 @@ class StereoViewDataset(Dataset):
     def __init__(self, hdf_path1, hdf_path2, target_names, indices, transform=None, target_transform=None, task_type='regression', class_to_idx=None):
         self.hdf_path1 = hdf_path1
         self.hdf_path2 = hdf_path2
-        self.target_names = target_names if isinstance(target_names, list) else [target_names]
+        # self.target_names = target_names if isinstance(target_names, list) else [target_names]
+        # Ensure target_names is a list of strings
+        if isinstance(target_names, torch.Tensor):
+            target_names = target_names.tolist()
+        self.target_names = [str(t) for t in (target_names if isinstance(target_names, list) else [target_names])]
         self.indices = indices
         self.transform = transform
         self.target_transform = target_transform
@@ -29,6 +33,9 @@ class StereoViewDataset(Dataset):
         return getattr(self._thread_local, path_key)
 
     def __getitem__(self, idx):
+        # Ensure idx is a Python int (not a tensor)
+        if isinstance(idx, torch.Tensor):
+            idx = idx.item()
         ds_file1 = self._get_file('hdf_path1')
         ds_file2 = self._get_file('hdf_path2')
         real_idx = self.indices[idx]
@@ -38,8 +45,11 @@ class StereoViewDataset(Dataset):
         img2 = ds_file2['images'][real_idx]  # shape (H, W)
 
         # Combine into a 2-channel image
-        img_2chan = np.stack([img1, img2], axis=0).astype(np.float32)  # (2, H, W)
-        img_tensor = torch.from_numpy(img_2chan)  # Convert to tensor here
+        # img_2chan = np.stack([img1, img2], axis=0).astype(np.float32)  # (2, H, W)
+        # img_tensor = torch.from_numpy(img_2chan)  # Convert to tensor here
+        img_3chan = np.stack([img1, img1, img2], axis=0).astype(np.float32)  # (3, H, W)
+        img_tensor = torch.from_numpy(img_3chan)  # Convert to tensor here
+        
 
         targets = [ds_file1[name][real_idx] for name in self.target_names]
 

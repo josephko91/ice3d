@@ -28,11 +28,15 @@ class SingleViewDataset(Dataset):
         return self._thread_local.ds_file
 
     def __getitem__(self, idx):
+        # Ensure idx is a Python int (not a tensor)
+        if isinstance(idx, torch.Tensor):
+            idx = idx.item()
         ds_file = self._get_file()
         real_idx = self.indices[idx]
         img = ds_file['images'][real_idx]  # shape (H, W)
-        img_3chan = np.repeat(img[None, :, :], 3, axis=0).astype(np.float32)  # (3, H, W)
-        img_tensor = torch.from_numpy(img_3chan)  # Convert to tensor here
+        # img_3chan = np.repeat(img[None, :, :], 3, axis=0).astype(np.float32)  # (3, H, W)
+        img = np.repeat(img[None, :, :], 1, axis=0).astype(np.float32)  # (1, H, W)
+        img_tensor = torch.from_numpy(img)  # Convert to tensor
         targets = [ds_file[name][real_idx] for name in self.target_names]
 
         # Map targets to class indices
