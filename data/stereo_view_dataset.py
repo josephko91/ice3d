@@ -18,14 +18,16 @@ class StereoViewDataset(Dataset):
         self.target_transform = target_transform
         self._thread_local = threading.local()
         self.task_type = task_type
-        if class_to_idx is None:
-            with h5py.File(self.hdf_path1, 'r') as ds_file:
-                # Read the entire target array once
-                all_targets = ds_file[self.target_names[0]][:]
-            unique_targets = sorted(set(float(t) for t in all_targets))
-            self.class_to_idx = {f"{t:.1f}": idx for idx, t in enumerate(unique_targets)}
+        if self.task_type == 'classification':
+            if class_to_idx is None:
+                with h5py.File(self.hdf_path1, 'r') as ds_file:
+                    all_targets = ds_file[self.target_names[0]][:]
+                unique_targets = sorted(set(float(t) for t in all_targets))
+                self.class_to_idx = {f"{t:.1f}": idx for idx, t in enumerate(unique_targets)}
+            else:
+                self.class_to_idx = class_to_idx
         else:
-            self.class_to_idx = class_to_idx
+            self.class_to_idx = None
 
     def _get_file(self, path_key):
         if not hasattr(self._thread_local, path_key):
@@ -47,10 +49,8 @@ class StereoViewDataset(Dataset):
         # Combine into a 2-channel image
         # img_2chan = np.stack([img1, img2], axis=0).astype(np.float32)  # (2, H, W)
         # img_tensor = torch.from_numpy(img_2chan)  # Convert to tensor here
-        img_3chan = np.stack([img1, img1, img2], axis=0).astype(np.float32)  # (3, H, W)
-        img_tensor = torch.from_numpy(img_3chan)  # Convert to tensor here
-        
-
+        img = np.stack([img1, img2], axis=0).astype(np.float32)  # (2, H, W)
+        img_tensor = torch.from_numpy(img)  # Convert to tensor here
         targets = [ds_file1[name][real_idx] for name in self.target_names]
 
         # Map targets to class indices

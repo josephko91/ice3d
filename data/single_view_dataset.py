@@ -13,14 +13,17 @@ class SingleViewDataset(Dataset):
         self.target_transform = target_transform
         self._thread_local = threading.local()
         self.task_type = task_type
-        if class_to_idx is None:
-            with h5py.File(self.hdf_path, 'r') as ds_file:
-                # Read the entire target array once
-                all_targets = ds_file[self.target_names[0]][:]
-            unique_targets = sorted(set(float(t) for t in all_targets))
-            self.class_to_idx = {f"{t:.1f}": idx for idx, t in enumerate(unique_targets)}
+        if self.task_type == 'classification':
+            if class_to_idx is None:
+                with h5py.File(self.hdf_path, 'r') as ds_file:
+                    # Read the entire target array once
+                    all_targets = ds_file[self.target_names[0]][:]
+                unique_targets = sorted(set(float(t) for t in all_targets))
+                self.class_to_idx = {f"{t:.1f}": idx for idx, t in enumerate(unique_targets)}
+            else:
+                self.class_to_idx = class_to_idx
         else:
-            self.class_to_idx = class_to_idx
+            self.class_to_idx = None
 
     def _get_file(self):
         if not hasattr(self._thread_local, "ds_file"):
