@@ -44,7 +44,11 @@ class SingleViewDataset(Dataset):
 
         # Map targets to class indices
         if self.task_type == 'classification':
-            target = self.class_to_idx[f"{float(targets[0]):.1f}"]
+            key = f"{float(targets[0]):.1f}"
+            if key not in self.class_to_idx:
+                print("BAD TARGET:", targets[0], "as key:", key, "Available keys:", list(self.class_to_idx.keys()))
+                raise ValueError(f"Target value {targets[0]} (as {key}) not found in class_to_idx mapping!")
+            target = self.class_to_idx[key]
             target_tensor = torch.tensor(target, dtype=torch.long)
 
         # Apply input transform (should be tensor transforms only)
