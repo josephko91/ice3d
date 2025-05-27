@@ -237,7 +237,7 @@ def main():
     parser.add_argument('--log_dir', type=str, default='./lightning_logs')
     parser.add_argument('--tb_log_name', type=str, default='tb')
     parser.add_argument('--csv_log_name', type=str, default='csv')
-    parser.add_argument('--class_to_idx', type=str, default=None, help='Path to class_to_idx JSON file')
+    parser.add_argument('--class_to_idx_json', type=str, default=None, help='Path to class_to_idx JSON file')
     parser.add_argument('--feature_names', type=str, default=None, help='Comma-separated list of feature column names')
     parser.add_argument('--num_gpus', type=int, default=1)
     parser.add_argument('--train_idx', type=str, default=None, help='Path to training indices file')
@@ -247,15 +247,15 @@ def main():
 
     # Load class_to_idx mapping if provided
     class_to_idx = None
-    if args.class_to_idx is not None:
-        with open(args.class_to_idx, 'r') as f:
+    if args.class_to_idx_json is not None:
+        with open(args.class_to_idx_json, 'r') as f:
             class_to_idx = json.load(f)
     # Ensure log directory exists
     os.makedirs(args.log_dir, exist_ok=True)
     tb_logger = TensorBoardLogger(args.log_dir, name=args.tb_log_name)
     csv_logger = CSVLogger(args.log_dir, name=args.csv_log_name)
 
-    dm = get_datamodule(args)
+    dm = get_datamodule(args, class_to_idx=class_to_idx)
     # dm.setup()
 
     input_size = None
@@ -270,14 +270,17 @@ def main():
             else:
                 num_classes = dm.num_classes
     elif args.model.endswith('classification'):
-        # For image classification, get num_classes from datamodule or user
-        num_classes = getattr(dm, 'num_classes', args.input_channels)  # fallback to input_channels
+        if class_to_idx is not None:
+            num_classes = len(class_to_idx)
+        else: # default to 7 classes
+            num_classes = 7
 
     model = get_model(args, input_size=input_size, output_size=output_size, num_classes=num_classes)
 
     trainer = Trainer(
         max_epochs=args.max_epochs,
         accelerator="auto",
+        # devices=1,
         devices=args.num_gpus,
         strategy="ddp",
         logger=[csv_logger, tb_logger],

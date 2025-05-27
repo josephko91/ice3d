@@ -1,11 +1,11 @@
 #!/bin/bash
-#PBS -N ml-regression-test
+#PBS -N cnn-classification-test
 #PBS -A UCLB0041
-#PBS -o ./out/torch-training/out-24.log 
-#PBS -e ./err/torch-training/err-24.log
-#PBS -l select=1:ncpus=18:ngpus=2:mem=100GB
-#PBS -l gpu_type=v100
-#PBS -l walltime=00:30:00
+#PBS -o ./out/torch-training/out-07.log 
+#PBS -e ./err/torch-training/err-07.log
+#PBS -l select=1:ncpus=64:ngpus=2:mem=100GB
+#PBS -l gpu_type=a100
+#PBS -l walltime=02:00:00
 #PBS -m abe
 #PBS -q casper
 #PBS -V
@@ -17,31 +17,31 @@ conda activate torch
 python_script_path="/glade/u/home/joko/ice3d/scripts/python/12-train-torch-models.py"
 
 # Set your arguments here
-MODEL="mlp_regression"
-DATA_TYPE="tabular"  # Options: tabular, single_view_h5, stereo_view_h5
+MODEL="cnn_classification"
+DATA_TYPE="single_view_h5"  # Options: tabular, single_view_h5, stereo_view_h5
 FEATURE_NAMES="aspect_ratio,aspect_ratio_elip,extreme_pts,contour_area,contour_perimeter,area_ratio,complexity,circularity"  # <-- Set your feature columns here
 # Tabular data
 TABULAR_FILE="/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/tabular-data-v2/ros-tabular-data.parquet"
 # Single view data
-HDF_FILE="/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/imgs-ml-ready/default.h5"
+HDF_FILE="/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/imgs-ml-ready/shuffled_small/default_shuffled_small.h5"
 # Stereo view data
 HDF_FILE_LEFT="/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/imgs-ml-ready/default.h5"
 HDF_FILE_RIGHT="/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/imgs-ml-ready/phips.h5"
-TARGETS="rho_eff,sa_eff"
-# TARGETS="n_arms"
+# TARGETS="rho_eff,sa_eff"
+TARGETS="n_arms"
 INPUT_CHANNELS=1
 BATCH_SIZE=128
 LR=1e-3
-MAX_EPOCHS=2
-SUBSET_SIZE=0.1
+MAX_EPOCHS=50
+SUBSET_SIZE=1.0
 SEED=666
-NUM_WORKERS=18
+NUM_WORKERS=64
 NUM_GPUS=2
-PREFETCH_FACTOR=16
-TASK_TYPE="regression"  # "regression" or "classification"
+PREFETCH_FACTOR=64
+TASK_TYPE="classification"  # "regression" or "classification"
 LOG_DIR="/glade/u/home/joko/ice3d/models/lightning_logs"
-TB_LOG_NAME="mlp-regression-subset-tb"
-CSV_LOG_NAME="mlp-regression-subset-csv"
+TB_LOG_NAME="cnn-classification-subset-tb"
+CSV_LOG_NAME="cnn-classification-subset-csv"
 # Specify the class mapping JSON file (set to empty string if not used)
 CLASS_TO_IDX_JSON="/glade/u/home/joko/ice3d/data/class_to_idx.json"
 # start timer
@@ -91,7 +91,7 @@ python $python_script_path \
     --tb_log_name $TB_LOG_NAME \
     --csv_log_name $CSV_LOG_NAME \
     --num_gpus $NUM_GPUS \
-    --class_to_idx $CLASS_TO_IDX_JSON \
+    --class_to_idx_json $CLASS_TO_IDX_JSON \
     --feature_names $FEATURE_NAMES
 
 end_time=$(date +%s)
