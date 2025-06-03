@@ -64,14 +64,17 @@ class TabularDataModule(pl.LightningDataModule):
             train_idx, temp_idx = train_test_split(indices, test_size=0.30, random_state=self.subset_seed)
             val_idx, test_idx = train_test_split(temp_idx, test_size=0.50, random_state=self.subset_seed)
         else:
-            def read_indices(idx):
-                if isinstance(idx, str):
-                    with open(idx, 'r') as f:
-                        return [int(line.strip()) for line in f if line.strip()]
-                return idx
-            train_idx = read_indices(self.train_idx)
-            val_idx = read_indices(self.val_idx)
-            test_idx = read_indices(self.test_idx)
+            # def read_indices(idx):
+            #     if isinstance(idx, str):
+            #         with open(idx, 'r') as f:
+            #             return [int(line.strip()) for line in f if line.strip()]
+            #     return idx
+            # train_idx = read_indices(self.train_idx)
+            # val_idx = read_indices(self.val_idx)
+            # test_idx = read_indices(self.test_idx)
+            train_idx = self.train_idx
+            val_idx = self.val_idx
+            test_idx = self.test_idx
 
         # Create datasets for each split using the indices
         train_df = df.iloc[train_idx]
