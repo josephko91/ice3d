@@ -2,6 +2,8 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 import numpy as np
 from .stereo_view_dataset import StereoViewDataset
+from sklearn.model_selection import train_test_split
+import h5py
 
 class StereoViewDataModule(pl.LightningDataModule):
     def __init__(
@@ -30,6 +32,21 @@ class StereoViewDataModule(pl.LightningDataModule):
         self.target_names = [target_names] if isinstance(target_names, str) else target_names
         self.hdf_file_left = hdf_file_left
         self.hdf_file_right = hdf_file_right
+        # deal with indices here
+        if (train_idx is None) or (val_idx is None) or (test_idx is None):
+            with h5py.File(self.hdf_file_left, 'r') as ds_file:
+                indices = list(range(len(ds_file['filenames'])))
+                train_idx, temp_idx = train_test_split(indices, test_size=0.30, random_state=subset_seed)
+                val_idx, test_idx = train_test_split(temp_idx, test_size=0.50, random_state=subset_seed)
+        else:
+            def read_indices(idx):
+                if isinstance(idx, str):
+                    with open(idx, 'r') as f:
+                        return [int(line.strip()) for line in f if line.strip()]
+                return idx
+            train_idx = read_indices(train_idx)
+            val_idx = read_indices(val_idx)
+            test_idx = read_indices(test_idx)
         self.train_idx = train_idx
         self.val_idx = val_idx
         self.test_idx = test_idx

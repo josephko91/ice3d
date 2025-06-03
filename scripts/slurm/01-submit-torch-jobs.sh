@@ -1,6 +1,6 @@
 
 #!/bin/bash
-#SBATCH --job-name=cnn-classification-test
+#SBATCH --job-name=cnn-class-stereo-2ds
 #SBATCH --account=ai2es_premium
 #SBATCH --output=./out/torch-training/out-01.log
 #SBATCH --error=./err/torch-training/err-01.log
@@ -15,36 +15,35 @@
 #SBATCH --mail-user=jk4730@columbia.edu
 
 # module purge
-eval "$(conda shell.bash hook)"
-conda activate 3d-modeling
 # module load cuda
 # module load conda
+eval "$(conda shell.bash hook)"
 conda activate torch
 
 python_script_path="/glade/u/home/joko/ice3d/scripts/python/12-train-torch-models.py"
 
 # Set your arguments here
 MODEL="cnn_classification"
-DATA_TYPE="single_view_h5"  # Options: tabular, single_view_h5, stereo_view_h5
+DATA_TYPE="stereo_view_h5"  # Options: tabular, single_view_h5, stereo_view_h5
 FEATURE_NAMES="aspect_ratio,aspect_ratio_elip,extreme_pts,contour_area,contour_perimeter,area_ratio,complexity,circularity"
 TABULAR_FILE="/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/tabular-data-v2/ros-tabular-data.parquet"
 HDF_FILE="/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/imgs-ml-ready/shuffled_small/default_shuffled_small.h5"
-HDF_FILE_LEFT="/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/imgs-ml-ready/default.h5"
-HDF_FILE_RIGHT="/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/imgs-ml-ready/phips.h5"
+HDF_FILE_LEFT="/home/jko/synth-ros-data/imgs-ml-ready/shuffled_small/default_shuffled_small.h5"
+HDF_FILE_RIGHT="/home/jko/synth-ros-data/imgs-ml-ready/shuffled_small/2ds_shuffled_small.h5"
 TARGETS="n_arms"
-INPUT_CHANNELS=1
+INPUT_CHANNELS=2
 BATCH_SIZE=128
 LR=1e-3
-MAX_EPOCHS=50
+MAX_EPOCHS=2
 SUBSET_SIZE=1.0
 SEED=666
-NUM_WORKERS=64
+NUM_WORKERS=32
 NUM_GPUS=2
-PREFETCH_FACTOR=64
+PREFETCH_FACTOR=32
 TASK_TYPE="classification"
 LOG_DIR="/glade/u/home/joko/ice3d/models/lightning_logs"
-TB_LOG_NAME="cnn-classification-subset-tb"
-CSV_LOG_NAME="cnn-classification-subset-csv"
+TB_LOG_NAME="stereo-2ds-cnn-classification-subset-tb"
+CSV_LOG_NAME="stereo-2ds-cnn-classification-subset-csv"
 CLASS_TO_IDX_JSON="/glade/u/home/joko/ice3d/data/class_to_idx.json"
 
 start_time=$(date +%s)
