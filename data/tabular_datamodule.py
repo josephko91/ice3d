@@ -90,6 +90,11 @@ class TabularDataModule(pl.LightningDataModule):
             x_np = x.numpy().reshape(1, -1)
             x_scaled = self.scaler.transform(x_np)[0]
             return torch.from_numpy(x_scaled.astype('float32'))
+        # def std_scale(x):
+        #     x_np = x.cpu().numpy().reshape(1, -1)
+        #     x_scaled = self.scaler.transform(x_np)[0]
+        #     return torch.from_numpy(x_scaled.astype('float32'))
+
         
         # Build class_to_idx if needed
         if self.class_to_idx is None and self.task_type == 'classification':
