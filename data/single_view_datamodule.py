@@ -41,7 +41,7 @@ class SingleViewDataModule(pl.LightningDataModule):
                 if isinstance(idx, str):
                     with open(idx, 'r') as f:
                         return [int(line.strip()) for line in f if line.strip()]
-                return idx
+                return idx 
             train_idx = read_indices(train_idx)
             val_idx = read_indices(val_idx)
             test_idx = read_indices(test_idx)
