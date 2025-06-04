@@ -11,7 +11,8 @@ class ResNet18Regression(pl.LightningModule):
         self.learning_rate = learning_rate
 
         # Load a pre-trained ResNet-18 model
-        self.resnet = resnet18(pretrained=pretrained)
+        # self.resnet = resnet18(pretrained=pretrained) # pretrained parameter deprecated
+        self.resnet = resnet18(weights=pretrained)
 
         # Modify the first convolutional layer to accept the specified input channels
         if input_channels != 3:
