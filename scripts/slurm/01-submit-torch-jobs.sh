@@ -1,50 +1,46 @@
-
 #!/bin/bash
-#SBATCH --job-name=cnn-class-stereo-2ds
+#SBATCH --job-name=resnet-reg-2ds-b128-e20
 #SBATCH --account=ai2es_premium
-#SBATCH --output=./out/torch-training/out-01.log
-#SBATCH --error=./err/torch-training/err-01.log
+#SBATCH --output=./out/torch-training/out-08.log
+#SBATCH --error=./err/torch-training/err-08.log
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
-#SBATCH --gres=gpu:a100:2
-#SBATCH --mem=100GB
-#SBATCH --time=02:00:00
-#SBATCH --partition=casper
+#SBATCH -p a100
+#SBATCH --gres=gpu:1
+#SBATCH --mem=500GB
+#SBATCH --time=04:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jk4730@columbia.edu
 
-# module purge
-# module load cuda
-# module load conda
 eval "$(conda shell.bash hook)"
 conda activate torch
 
-python_script_path="/glade/u/home/joko/ice3d/scripts/python/12-train-torch-models.py"
+python_script_path="/home/jko/ice3d/scripts/python/12-train-torch-models.py"
 
 # Set your arguments here
-MODEL="cnn_classification"
+MODEL="resnet18_regression"
 DATA_TYPE="stereo_view_h5"  # Options: tabular, single_view_h5, stereo_view_h5
 FEATURE_NAMES="aspect_ratio,aspect_ratio_elip,extreme_pts,contour_area,contour_perimeter,area_ratio,complexity,circularity"
 TABULAR_FILE="/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/tabular-data-v2/ros-tabular-data.parquet"
-HDF_FILE="/glade/derecho/scratch/joko/synth-ros/params_200_50_20250403/imgs-ml-ready/shuffled_small/default_shuffled_small.h5"
+HDF_FILE="/home/jko/synth-ros-data/imgs-ml-ready/shuffled_small/default_shuffled_small.h5"
 HDF_FILE_LEFT="/home/jko/synth-ros-data/imgs-ml-ready/shuffled_small/default_shuffled_small.h5"
 HDF_FILE_RIGHT="/home/jko/synth-ros-data/imgs-ml-ready/shuffled_small/2ds_shuffled_small.h5"
-TARGETS="n_arms"
+TARGETS="rho_eff,sa_eff"
 INPUT_CHANNELS=2
 BATCH_SIZE=128
 LR=1e-3
-MAX_EPOCHS=2
+MAX_EPOCHS=20
 SUBSET_SIZE=1.0
 SEED=666
 NUM_WORKERS=32
-NUM_GPUS=2
+NUM_GPUS=1
 PREFETCH_FACTOR=32
-TASK_TYPE="classification"
-LOG_DIR="/glade/u/home/joko/ice3d/models/lightning_logs"
-TB_LOG_NAME="stereo-2ds-cnn-classification-subset-tb"
-CSV_LOG_NAME="stereo-2ds-cnn-classification-subset-csv"
-CLASS_TO_IDX_JSON="/glade/u/home/joko/ice3d/data/class_to_idx.json"
+TASK_TYPE="regression"
+LOG_DIR="/home/jko/ice3d/models/lightning_logs"
+TB_LOG_NAME="resnet18-regression-stereo-2ds-subset-70k-tb"
+CSV_LOG_NAME="resnet18-regression-stereo-2ds-subset-70k-csv"
+CLASS_TO_IDX_JSON="/home/jko/ice3d/data/class_to_idx.json"
 
 start_time=$(date +%s)
 
@@ -57,9 +53,9 @@ elif [ "$DATA_TYPE" = "stereo_view_h5" ]; then
     DATA_ARGS="--hdf_file_left $HDF_FILE_LEFT --hdf_file_right $HDF_FILE_RIGHT"
 fi
 
-TRAIN_IDX=""
-VAL_IDX=""
-TEST_IDX=""
+TRAIN_IDX="/home/jko/synth-ros-data/idx/idx-train-sequential-subset-70k.txt"
+VAL_IDX="/home/jko/synth-ros-data/idx/idx-val-sequential-subset-70k.txt"
+TEST_IDX="/home/jko/synth-ros-data/idx/idx-test-sequential-subset-70k.txt"
 
 if [ -n "$TRAIN_IDX" ]; then
     DATA_ARGS="$DATA_ARGS --train_idx $TRAIN_IDX"

@@ -13,7 +13,7 @@ import torchvision.transforms as T
 import json
 
 # Add your project root to sys.path for imports
-sys.path.append('/glade/u/home/joko/ice3d')
+sys.path.append('/home/jko/ice3d')
 
 # Import your models and datamodules
 from models.mlp_regression import MLPRegression
@@ -274,6 +274,8 @@ def main():
             num_classes = len(class_to_idx)
         else: # default to 7 classes
             num_classes = 7
+    elif args.model.endswith('regression'):
+        output_size = len(args.targets.split(','))
 
     model = get_model(args, input_size=input_size, output_size=output_size, num_classes=num_classes)
 
