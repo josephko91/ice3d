@@ -9,6 +9,7 @@ import pytorch_lightning as pl
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import TensorBoardLogger, CSVLogger
 from pytorch_lightning.utilities import rank_zero_only
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 import torchvision.transforms as T
 import json
 
@@ -256,7 +257,7 @@ def main():
     csv_logger = CSVLogger(args.log_dir, name=args.csv_log_name)
 
     dm = get_datamodule(args, class_to_idx=class_to_idx)
-    # dm.setup()
+    dm.setup()
 
     input_size = None
     output_size = None
@@ -279,14 +280,32 @@ def main():
 
     model = get_model(args, input_size=input_size, output_size=output_size, num_classes=num_classes)
 
+    # early_stop_callback = EarlyStopping(
+    # monitor="val_loss",      # Metric to monitor
+    # mode="min",              # "min" for loss, "max" for accuracy
+    # patience=5,              # Stop if no improvement after N validations
+    # min_delta=0.001,         # Minimum change to qualify as improvement
+    # verbose=True             # Print messages on early stopping
+    # )
+
+    checkpoint_callback = ModelCheckpoint(
+        monitor="val_loss",         # Metric to monitor
+        mode="min",                 # Save checkpoints with lower val_loss
+        save_top_k=3,               # Save the 3 best models
+        filename="model-{epoch:02d}-{val_loss:.4f}",  # Custom filename
+        # every_n_epochs=1,           # Save every epoch (optional)
+        save_last=True              # Also save the last epoch
+    )
+
     trainer = Trainer(
         max_epochs=args.max_epochs,
         accelerator="auto",
-        # devices=1,
-        devices=args.num_gpus,
-        strategy="ddp",
+        devices=1,
+        # devices=args.num_gpus,
+        # strategy="ddp",
         logger=[csv_logger, tb_logger],
         enable_progress_bar=True,
+        callbacks=[checkpoint_callback]
     )
 
     trainer.fit(model, dm)

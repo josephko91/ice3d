@@ -28,7 +28,7 @@ def create_bullet(a, c, hp, f_a, f_c, workplane):
 
 def calc_r0(f_r0, a, n_arms):
     '''
-    linearly interpolate between perscribed limits for r0
+    linearly interpolate between prescribed limits for r0
     '''
     ymin, ymax = 0.5*a, 1*a
     xmin, xmax = 4, 12
