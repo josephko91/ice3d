@@ -10,7 +10,7 @@ class ResNet18Regression(pl.LightningModule):
         super(ResNet18Regression, self).__init__()
         self.learning_rate = learning_rate
 
-        # Load a pre-trained ResNet-18 model
+        # Load ResNet-18
         self.resnet = resnet18(weights=weights)
 
         # Modify the first convolutional layer to accept the specified input channels

@@ -6,12 +6,12 @@ from torchvision.models import resnet18
 
 class ResNet18Classification(pl.LightningModule):
     def __init__(self, input_channels, num_classes, 
-                 learning_rate=1e-3, pretrained=False):
+                 learning_rate=1e-3, weights=False):
         super(ResNet18Classification, self).__init__()
         self.learning_rate = learning_rate
 
-        # Load a prebuilt ResNet-18 model
-        self.resnet18 = resnet18(pretrained=pretrained)
+        # Load ResNet-18
+        self.resnet18 = resnet18(weights=weights)
 
         # Modify the first convolutional layer to accept the specified input_channels
         if input_channels != 3:

@@ -13,11 +13,6 @@ class VanillaCNNRegression(pl.LightningModule):
         self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)
         self.conv3 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1)
         
-        # # Convolutional layers
-        # self.conv1 = nn.Conv2d(input_channels, 32, kernel_size=3, stride=1, padding=1)
-        # self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1)
-        # self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1)
-        
         # Pooling layer
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
         
@@ -26,10 +21,6 @@ class VanillaCNNRegression(pl.LightningModule):
         # -> After conv2+pool: 64x56x56 -> After conv3+pool: 128x28x28
         flattened_size = 64 * 28 * 28
         
-        # # Fully connected layers
-        # self.fc1 = nn.Linear(flattened_size, 256)
-        # self.fc2 = nn.Linear(256, 128)
-        # self.fc3 = nn.Linear(128, output_size)  # Output size = 2 for two targets
         # Fully connected layers
         self.fc1 = nn.Linear(flattened_size, 128)
         self.fc2 = nn.Linear(128, 64)
