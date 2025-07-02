@@ -47,10 +47,6 @@ class TabularDataModule(pl.LightningDataModule):
         else:
             raise ValueError(f"Unsupported file type: {self.data_file}")
 
-        # Subset before splitting, if needed
-        if self.subset_size < 1.0:
-            df = df.sample(frac=self.subset_size, random_state=self.subset_seed).reset_index(drop=True)
-
         # Infer feature columns if not provided
         if self.feature_names is None:
             feature_cols = [col for col in df.columns if col not in self.target_names]
@@ -60,9 +56,15 @@ class TabularDataModule(pl.LightningDataModule):
 
         # If indices are not provided, generate them here
         if (self.train_idx is None) or (self.val_idx is None) or (self.test_idx is None):
+            # Subset before splitting, if needed
+            if self.subset_size < 1.0:
+                df = df.sample(frac=self.subset_size, random_state=self.subset_seed).reset_index(drop=True)
             indices = list(range(len(df)))
             train_idx, temp_idx = train_test_split(indices, test_size=0.30, random_state=self.subset_seed)
             val_idx, test_idx = train_test_split(temp_idx, test_size=0.50, random_state=self.subset_seed)
+            train_df = df.iloc[train_idx]
+            val_df = df.iloc[val_idx]
+            test_df = df.iloc[test_idx]
         else:
             def read_indices(idx):
                 if isinstance(idx, str):
@@ -72,27 +74,23 @@ class TabularDataModule(pl.LightningDataModule):
             train_idx = read_indices(self.train_idx)
             val_idx = read_indices(self.val_idx)
             test_idx = read_indices(self.test_idx)
-
-        # Create datasets for each split using the indices
-        train_df = df.iloc[train_idx]
-        val_df = df.iloc[val_idx]
-        test_df = df.iloc[test_idx]
+            train_df = df.iloc[train_idx]
+            val_df = df.iloc[val_idx]
+            test_df = df.iloc[test_idx]
+            # Subset after indexing, if needed
+            if self.subset_size < 1.0:
+                train_df = train_df.sample(frac=self.subset_size, random_state=self.subset_seed).reset_index(drop=True)
+                val_df = val_df.sample(frac=self.subset_size, random_state=self.subset_seed).reset_index(drop=True)
+                test_df = test_df.sample(frac=self.subset_size, random_state=self.subset_seed).reset_index(drop=True)
 
         # Fit scaler on the training features
         train_features = train_df[self.feature_names].values.astype('float32')
         self.scaler = StandardScaler().fit(train_features)
-        # Define transform function for use in TabularDataset
         def std_scale(x):
-            # x is a 1D torch tensor
             x_np = x.numpy().reshape(1, -1)
             x_scaled = self.scaler.transform(x_np)[0]
             return torch.from_numpy(x_scaled.astype('float32'))
-        # def std_scale(x):
-        #     x_np = x.cpu().numpy().reshape(1, -1)
-        #     x_scaled = self.scaler.transform(x_np)[0]
-        #     return torch.from_numpy(x_scaled.astype('float32'))
 
-        
         # Build class_to_idx if needed
         if self.class_to_idx is None and self.task_type == 'classification':
             if not isinstance(self.target_names, (list, tuple)) or len(self.target_names) == 0:
