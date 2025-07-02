@@ -12,11 +12,6 @@ class VanillaCNNClassification(pl.LightningModule):
         self.conv1 = nn.Conv2d(input_channels, 16, kernel_size=3, stride=1, padding=1)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)
         self.conv3 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1)
-
-        # # Convolutional layers
-        # self.conv1 = nn.Conv2d(input_channels, 32, kernel_size=3, stride=1, padding=1)
-        # self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1)
-        # self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1)
         
         # Pooling layer
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
@@ -30,10 +25,6 @@ class VanillaCNNClassification(pl.LightningModule):
         self.fc1 = nn.Linear(flattened_size, 128)
         self.fc2 = nn.Linear(128, 64)
         self.fc3 = nn.Linear(64, num_classes)  # Output size = num_classes for classification
-        # # Fully connected layers
-        # self.fc1 = nn.Linear(flattened_size, 256)
-        # self.fc2 = nn.Linear(256, 128)
-        # self.fc3 = nn.Linear(128, num_classes)  # Output size = num_classes for classification
 
     def forward(self, x):
         # Convolutional layers with ReLU and pooling
