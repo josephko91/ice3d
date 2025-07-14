@@ -1,7 +1,6 @@
 # User added 
 output/
-models/lightning_logs/
-notebooks/lightning_logs/
+**/lightning_logs/
 models/skl-models/
 
 # Byte-compiled / optimized / DLL files
