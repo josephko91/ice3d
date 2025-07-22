@@ -25,11 +25,11 @@ class Rosette:
         s_code : list
             Spherical coordinates for bullet placement
         perturb_aspect_ratio : list
-            Aspect ratio perturbations [f_a_1, f_c_1, ..., f_a_n_arms, f_c_n_arms]
+            Aspect ratio     perturbations [f_a_1, f_c_1, ..., f_a_n_arms, f_c_n_arms]
         perturb_s_code_switch : int
             1 to perturb s_code, 0 for no perturbation
         model : str
-            Model type: joe, pokrifka
+            Model type: ko, pokrifka
         pokrifka_defaults : list
             Default parameters for Pokrifka model [r0_pokrifka, f_pyr, f_a0]
         """
