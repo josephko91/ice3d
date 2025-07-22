@@ -8,7 +8,11 @@ class Rosette:
     A class for creating and analyzing 3D rosette geometries using CadQuery.
     """
 
-    def __init__(self, base_params, n_arms, s_code, perturb_aspect_ratio, perturb_s_code_switch=0):
+    def __init__(self, base_params, n_arms, 
+                 s_code, perturb_aspect_ratio, 
+                 perturb_s_code_switch=0,
+                 model='ko',
+                 pokrifka_default_params=[10, 0.5, 0.7]):
         """
         Initialize a Rosette object.
 
@@ -24,6 +28,10 @@ class Rosette:
             Aspect ratio perturbations [f_a_1, f_c_1, ..., f_a_n_arms, f_c_n_arms]
         perturb_s_code_switch : int
             1 to perturb s_code, 0 for no perturbation
+        model : str
+            Model type: joe, pokrifka
+        pokrifka_defaults : list
+            Default parameters for Pokrifka model [r0_pokrifka, f_pyr, f_a0]
         """
         self.base_params = base_params
         self.n_arms = n_arms
@@ -32,9 +40,13 @@ class Rosette:
         self.perturb_s_code_switch = perturb_s_code_switch
         self.ros = None
         self._calculated_params = {}
+        self.model = model
+        self.pokrifka_default_params = pokrifka_default_params
+        self.r0_pokrifka = self.pokrifka_default_params[0]
+        self.f_pyr = self.pokrifka_default_params[1]
+        self.f_a0 = self.pokrifka_default_params[2]
 
-    @staticmethod
-    def norm_rows(v):
+    def norm_rows(self, v):
         if np.all(v == 0):
             v_unit = np.array([1, 0, 0])
         else:
@@ -46,8 +58,7 @@ class Rosette:
                 v_unit = v / v_norm[:, None]
         return v_unit
 
-    @staticmethod
-    def random_spherical_cap(cone_angle_deg, cone_direction, num_points):
+    def random_spherical_cap(self, cone_angle_deg, cone_direction, num_points):
         cone_angle_rad = cone_angle_deg * (np.pi / 180)
         z = np.random.uniform(np.cos(cone_angle_rad), 1, num_points)
         phi = np.random.uniform(0, 2 * np.pi, num_points)
@@ -55,8 +66,8 @@ class Rosette:
         y = np.sqrt(1 - z ** 2) * np.sin(phi)
         points = np.column_stack((x, y, z))
         north_vector = np.array([0, 0, 1])
-        cone_direction_norm = Rosette.norm_rows(cone_direction)
-        u = Rosette.norm_rows(np.cross(north_vector, cone_direction_norm))
+        cone_direction_norm = self.norm_rows(cone_direction)
+        u = self.norm_rows(np.cross(north_vector, cone_direction_norm))
         rot = np.arccos(np.dot(cone_direction_norm, north_vector))
         ux, uy, uz = u[0], u[1], u[2]
         rot_mat = np.array([
@@ -67,8 +78,7 @@ class Rosette:
         points_rot = np.matmul(rot_mat, points.T).T
         return points_rot
 
-    @staticmethod
-    def get_perturb_aspect_ratio(n_arms, f_a_c_limits):
+    def get_perturb_aspect_ratio(self, n_arms, f_a_c_limits):
         f_a_c = []
         for i in range(n_arms):
             f_a = random.uniform(f_a_c_limits[0], f_a_c_limits[1])
@@ -77,50 +87,99 @@ class Rosette:
             f_a_c.append(f_c)
         return f_a_c
 
-    @staticmethod
-    def get_cone_angle(n_arms):
+    def get_cone_angle(self, n_arms):
         min_angles = {4: 109.4712206, 5: 90.0, 6: 90.0, 7: 77.8695421, 8: 74.8584922, 9: 70.5287794, 10: 66.1468220}
         return min_angles[n_arms] / 3
 
-    @classmethod
-    def perturb_s_code(cls, n_arms, s_code):
+    def perturb_s_code(self, n_arms, s_code):
         s_code_perturbed = []
-        cone_angle_deg = cls.get_cone_angle(n_arms)
+        cone_angle_deg = self.get_cone_angle(n_arms)
         for i in range(n_arms):
             cone_direction = np.array([s_code[3 * i], s_code[3 * i + 1], s_code[3 * i + 2]])
-            points_rot = cls.random_spherical_cap(cone_angle_deg, cone_direction, 1)
+            points_rot = self.random_spherical_cap(cone_angle_deg, cone_direction, 1)
             pt = points_rot[0]
             s_code_perturbed.extend(pt)
         return s_code_perturbed
 
-    @staticmethod
-    def _calc_r0(f_r0, a, n_arms):
-        ymin, ymax = 0.5 * a, 1 * a
-        xmin, xmax = 4, 12
-        slope = (ymax - ymin) / (xmax - xmin)
-        intercept = ymin - (slope * xmin)
-        r0 = slope * n_arms + intercept
-        r0 = f_r0 * r0
+    def _calc_r0(self, f_r0, a, n_arms):
+        """
+        Calculate r0 based on the model type.
+
+        Args:
+            f_r0 (float): Scaling factor for r0.
+            a (float): Parameter a.
+            n_arms (int): Number of arms.
+
+        Returns:
+            float: Calculated r0 value.
+
+        Raises:
+            ValueError: If model type is unsupported.
+        """
+        if self.model == 'ko':
+            ymin, ymax = 0.5 * a, 1 * a
+            xmin, xmax = 4, 12
+            slope = (ymax - ymin) / (xmax - xmin)
+            intercept = ymin - (slope * xmin)
+            r0 = slope * n_arms + intercept
+            r0 = f_r0 * r0
+        elif self.model == 'pokrifka':
+            r0 = self.r0_pokrifka * f_r0
+        else:
+            raise ValueError(f"Unsupported model: {self.model}")    
         return r0
 
-    @staticmethod
-    def _calc_hp(f_hp, r0, n_arms):
-        ymin, ymax = 1 * r0, 1.5 * r0
-        xmin, xmax = 4, 12
-        slope = (ymax - ymin) / (xmax - xmin)
-        intercept = ymin - (slope * xmin)
-        hp = slope * n_arms + intercept
-        hp = f_hp * hp
+# r0 is constant, hp = 2 * c * f_pyr (f_pyr constant), h0 = hp * f_a0 * r0 / a (f_a0 constant)
+
+    def _calc_hp(self, f_hp, r0, n_arms, c):
+        """
+        Calculate hp based on the model type.
+        Args:
+            f_hp (float): Scaling factor for hp.
+            r0 (float): Base radius.
+            n_arms (int): Number of arms.
+            c (float): Parameter c.
+        Returns:
+            float: Calculated hp value.
+        Raises:
+            ValueError: If model type is unsupported.
+        """
+        if self.model == 'ko':
+            ymin, ymax = 1 * r0, 1.5 * r0
+            xmin, xmax = 4, 12
+            slope = (ymax - ymin) / (xmax - xmin)
+            intercept = ymin - (slope * xmin)
+            hp = slope * n_arms + intercept
+            hp = f_hp * hp
+        elif self.model == 'pokrifka':
+            hp = 2 * c * self.f_pyr * f_hp
+        else:
+            raise ValueError(f"Unsupported model: {self.model}")
         return hp
 
-    @staticmethod
-    def _calc_h0(f_h0, r0):
-        h0 = r0 / 2
-        h0 = f_h0 * h0
+    def _calc_h0(self, f_h0, r0, hp, a):
+        """
+        Calculate h0 based on the model type.
+        Args:
+            f_h0 (float): Scaling factor for h0.
+            r0 (float): Base radius.
+            hp (float): Height of the pyramid.
+            a (float): Parameter a.
+        Returns:
+            float: Calculated h0 value.
+        Raises:
+            ValueError: If model type is unsupported.
+        """
+        if self.model == 'ko':
+            h0 = r0 / 2
+            h0 = f_h0 * h0
+        elif self.model == 'pokrifka':
+            h0 = hp * self.f_a0 * r0 / a
+        else:
+            raise ValueError(f"Unsupported model: {self.model}")
         return h0
 
-    @staticmethod
-    def _extract_xyz(s_code):
+    def _extract_xyz(self, s_code):
         x, y, z = [], [], []
         for i in range(0, len(s_code), 3):
             x.append(s_code[i])
@@ -128,8 +187,7 @@ class Rosette:
             z.append(s_code[i + 2])
         return x, y, z
 
-    @staticmethod
-    def _create_bullet(a, c, hp, f_a, f_c, workplane):
+    def _create_bullet(self, a, c, hp, f_a, f_c, workplane):
         n_pyr = 6
         ri = a * np.cos(np.radians(30))
         theta = 90 - np.degrees(np.arctan(hp / ri))
@@ -142,8 +200,8 @@ class Rosette:
     def create_geometry(self):
         a, c, f_r0, f_hp, f_h0 = self.base_params
         r0 = self._calc_r0(f_r0, a, self.n_arms)
-        hp = self._calc_hp(f_hp, r0, self.n_arms)
-        h0 = self._calc_h0(f_h0, r0)
+        hp = self._calc_hp(f_hp, r0, self.n_arms, c)
+        h0 = self._calc_h0(f_h0, r0, hp, a)
         self._calculated_params = {'r0': r0, 'hp': hp, 'h0': h0}
         sphere = cq.Workplane().sphere(r0)
         r_outer = r0 + hp - h0
